@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/biblioteca.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <title>Biblioteca do Sonhar</title>
+</head>
+<body>
+    <main>
+
+        <form id="form-pesquisa">
+            <input id="pesquisa" type="text" maxlength="300" autocomplete="off" placeholder="Procure o que quiser na biblioteca do Sonhar" aria-label="Texto a procurar na biblioteca">
+            <button type="submit">Procurar</button>
+        </form>
+
+        <div class="comp">
+            <div class="livro" id="livro">
+                <section class="pagina pagina-esquerda" id="pagina-esquerda">
+                    <p class="texto-pagina">Começo</p>
+                    <span class="numero-pagina">1</span>
+                </section>
+                <section class="pagina pagina-direita" id="pagina-direita">
+                    <p class="texto-pagina">Outro lado</p>
+                    <span class="numero-pagina">2</span>
+                </section>
+
+                <div class="folha vai-adiante" id="folha" aria-hidden="true">
+                    <div class="face frente">
+                        <p class="texto-pagina"></p>
+                        <span class="numero-pagina"></span>
+                    </div>
+                    <div class="face verso">
+                        <p class="texto-pagina"></p>
+                        <span class="numero-pagina"></span>
+                    </div>
+
+                </div>
+
+            </div>
+            <p id="endereco-atual" aria-live="polite"></p>
+            <button id="anterior" type="button">Página anterior</button>
+            <button id="proxima" type="button">Pŕoxima página</button>
+        </div>
+
+        <form>
+            <label for="sala">Sala</label>
+            <input id="sala" name="sala" type="number" min="1" value="1" required>
+            <label for="estante">Estante</label>
+            <input id="estante" name="estante" type="number" min="1" value="1" required>
+            <label for="numero-livro">Livro</label>
+            <input id="numer-livro" name="livro" type="number" min="1" value="1" required>
+            <label for="numero-pagina">Página</label>
+            <input id="numero-pagina" name="pagina" type="number" min="1" value="1" required>
+            <button type="submit">Ir</button>
+        </form>
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,82 @@
+:root{
+    --bg: #07060f;
+    --pg: #d5cbb0;
+    color-scheme: dark;
+}
+
+body{
+    margin: 0;
+    background:radial-gradient(ellipse at 50% 40%,#1c1740 0%,#0b0918 48%,var(--bg) 82%) fixed;
+}
+main{
+    display: grid;
+    justify-content: center;
+}
+#pesquisa{
+    width: min(600px,92vw);
+    background: none;
+    border: 0;
+    border-bottom: 1px solid;
+    text-align: center;
+    padding: 8px;
+    outline: none;
+}
+.livro{
+    position: relative;
+    width: min(90vw, 760px);
+    aspect-ratio: 2 / 1.42;
+}
+.pagina{
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    padding: 6% 5% 10%;
+    background: var(--pg);
+    color: #2a2119;
+}
+.pagina-esquerda{
+    left: 0;
+    background: linear-gradient(to left, #0003, transparent 18%), var(--pg);
+}
+.pagina-direita{
+    left: 50%;
+    background: linear-gradient(to right, #0003, transparent 18%), var(--pg);
+}
+.folha{
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 10;
+    visibility: hidden;
+    pointer-events: none;
+    transform-style: preserve-3d;
+}
+.face{
+    box-sizing: border-box;
+    position: absolute;
+    inset: 0;
+    padding: 12% 10% 20%;
+    background: var(--pg);
+    color: #2a2119;
+    backface-visibility: hidden;
+}
+.verso{
+    transform: rotateY(180deg);
+}
+.folha.vai-adiante{
+    left: 50%;
+    transform-origin: left center;
+}
+.folha.vai-atras{
+    left: 0;
+    transform-origin: right center;
+}
+.comp{
+    perspective: 1800px;
+}
+.livro{
+    transform-style: preserve-3d;
+}
