@@ -17,7 +17,7 @@
         </form>
 
         <div class="comp">
-            <div class="livro" id="livro">
+            <div class="livro fechado" id="livro">
                 <section class="pagina pagina-esquerda" id="pagina-esquerda">
                     <p class="texto-pagina">Começo</p>
                     <span class="numero-pagina">1</span>
@@ -39,8 +39,16 @@
 
                 </div>
 
+                <div class="capa" id="capa">
+                    <div class="capa-frente">
+                        <h1>Biblioteca<br>do Sonhar</h1>
+                    </div>
+                    <div class="capa-verso" aria-hidden="true"></div>
+                </div>
+
             </div>
             <p id="endereco-atual" aria-live="polite"></p>
+            <button id="abrir-livro" type="button">Abrir livro</button>
             <button id="anterior" type="button">Página anterior</button>
             <button id="proxima" type="button">Pŕoxima página</button>
         </div>

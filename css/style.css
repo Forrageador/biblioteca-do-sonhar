@@ -1,7 +1,7 @@
 :root{
+    color-scheme: dark;
     --bg: #07060f;
     --pg: #d5cbb0;
-    color-scheme: dark;
 }
 
 body{
@@ -20,6 +20,7 @@ main{
     text-align: center;
     padding: 8px;
     outline: none;
+    margin: 10px;
 }
 .livro{
     position: relative;
@@ -39,10 +40,13 @@ main{
 .pagina-esquerda{
     left: 0;
     background: linear-gradient(to left, #0003, transparent 18%), var(--pg);
+    border-radius: 8px 0 0 8px;
 }
 .pagina-direita{
     left: 50%;
     background: linear-gradient(to right, #0003, transparent 18%), var(--pg);
+    border-radius: 0 8px 8px 0;
+
 }
 .folha{
     position: absolute;
@@ -62,9 +66,13 @@ main{
     background: var(--pg);
     color: #2a2119;
     backface-visibility: hidden;
+    background: linear-gradient(to right, #0003, transparent 18%), var(--pg);
+    border-radius: 0 8px 8px 0;
 }
 .verso{
     transform: rotateY(180deg);
+    background: linear-gradient(to left, #0003, transparent 18%), var(--pg);
+    border-radius: 8px 0 0 8px;
 }
 .folha.vai-adiante{
     left: 50%;
@@ -79,4 +87,55 @@ main{
 }
 .livro{
     transform-style: preserve-3d;
+    transform: translateX(-25%);
+    transition: transform 1400ms ease-in-out;
+}
+.capa{
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    z-index: 20;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transform: translateZ(4px);
+    pointer-events: none;
+}
+.capa-frente, .capa-verso{
+    box-sizing: border-box;
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+}
+.capa-frente{
+    display: grid;
+    place-items: center;
+    padding: 10%;
+    background: #211936;
+    color: #e3c888;
+    border-radius: 0 8px 8px 0;
+    text-align: center;
+}
+.capa-frente h1{
+    margin: 0;
+    font-size: clamp(1rem, 3vw, 2rem);
+}
+.capa-verso{
+    background: var(--pg);
+    transform: rotateY(180deg);
+    border-radius: 8px 0 0 8px;
+    background: linear-gradient(to left, #0003, transparent 18%), var(--pg);
+}
+.livro.fechado > .pagina{
+    visibility: hidden;
+}
+.livro.aberto > .capa{
+    visibility: hidden;
+}
+.livro:not(.aberto) > .pagina-esquerda{
+    visibility: hidden;
+}
+.livro:not(.fechado){
+    transform: translateX(0);
 }
