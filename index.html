@@ -12,8 +12,9 @@
     <main>
 
         <form id="form-pesquisa">
-            <input id="pesquisa" type="text" maxlength="300" autocomplete="off" placeholder="Procure o que quiser na biblioteca do Sonhar" aria-label="Texto a procurar na biblioteca">
+            <input id="pesquisa" type="text" maxlength="2000" autocomplete="off" placeholder="Procure o que quiser na biblioteca do Sonhar" aria-label="Texto a procurar na biblioteca">
             <button type="submit">Procurar</button>
+            <p id="erro-pesquisa" role="alert"></p>
         </form>
 
         <div class="comp">
@@ -43,26 +44,30 @@
                     <div class="capa-frente">
                         <h1>Biblioteca<br>do Sonhar</h1>
                     </div>
-                    <div class="capa-verso" aria-hidden="true"></div>
+                    <div class="capa-verso" aria-hidden="true">
+                        <p class="texto-pagina"></p>
+                        <span class="numero-pagina"></span>
+                    </div>
                 </div>
 
             </div>
             <p id="endereco-atual" aria-live="polite"></p>
-            <button id="abrir-livro" type="button">Abrir livro</button>
             <button id="anterior" type="button">Página anterior</button>
-            <button id="proxima" type="button">Pŕoxima página</button>
+            <button id="proxima" type="button">Próxima página</button>
         </div>
 
-        <form>
+        <form id="form-endereco">
             <label for="sala">Sala</label>
-            <input id="sala" name="sala" type="number" min="1" value="1" required>
+            <input id="sala" name="sala" type="text" pattern="[0-9a-zA-Z]+" value="1" required>
             <label for="estante">Estante</label>
-            <input id="estante" name="estante" type="number" min="1" value="1" required>
+            <input id="estante" name="estante" type="number" min="1" step="1" value="1" required>
             <label for="numero-livro">Livro</label>
-            <input id="numer-livro" name="livro" type="number" min="1" value="1" required>
+            <input id="numero-livro" name="livro" type="number" min="1" step="1" value="1" required>
             <label for="numero-pagina">Página</label>
-            <input id="numero-pagina" name="pagina" type="number" min="1" value="1" required>
+            <input id="numero-pagina" name="pagina" type="number" min="1" step="1" value="1" required>
             <button type="submit">Ir</button>
+
+            <p id="erro-endereco" role="alert"></p>
         </form>
 
     </main>

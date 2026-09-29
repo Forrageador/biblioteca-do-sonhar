@@ -1,5 +1,5 @@
 const estado = {
-    sala: 1,
+    sala: 1n,
     estante: 1,
     livro: 1,
     par: 1,
@@ -7,40 +7,123 @@ const estado = {
     aberto: false
 };
 
+let textoPesquisado = '';
+
+const formularioPesquisa = document.getElementById('form-pesquisa');
+const campoPesquisa = document.getElementById('pesquisa');
+const erroPesquisa = document.getElementById('erro-pesquisa');
+
+const formularioEndereco = document.getElementById('form-endereco');
+
+const campoSala = document.getElementById('sala');
+const campoEstante = document.getElementById('estante');
+const campoLivro = document.getElementById('numero-livro');
+const campoPagina = document.getElementById('numero-pagina');
+
+const erroEndereco = document.getElementById('erro-endereco');
+
+campoEstante.max = LIMITES.estantes;
+campoLivro.max = LIMITES.livros;
+campoPagina.max = LIMITES.paginas;
+
 const paginaEsquerda = document.getElementById('pagina-esquerda');
 const paginaDireita = document.getElementById('pagina-direita');
 
 const elementoLivro = document.getElementById('livro');
 const capa = document.getElementById('capa');
-const botaoAbrir = document.getElementById('abrir-livro');
+const versoCapa = capa.querySelector('.capa-verso');
 
 const folha = document.getElementById('folha');
 const frente = folha.querySelector('.frente');
 const verso = folha.querySelector('.verso');
 
-const numeroEsquerdo = estado.par * 2 - 1;
-const numeroDireito = estado.par *2;
-
 function obterPar(endereco, par) {
     const esquerda = par * 2 - 1;
     const direita = par * 2;
 
-    return {
-        esquerda: { numero: esquerda, texto: `Texto da página ${esquerda}.`},
-        direita: { numero: direita, texto: `Texto da página ${direita}.`}
+    const paginas = {
+        esquerda: {
+            numero: esquerda,
+            texto: gerarPagina(
+                endereco.sala,
+                endereco.estante,
+                endereco.livro,
+                esquerda
+            )
+        },
+        direita: {
+            numero: direita,
+            texto: gerarPagina(
+                endereco.sala,
+                endereco.estante,
+                endereco.livro,
+                direita
+            )
+        }
     };
+
+    const textoCompleto = paginas.esquerda.texto + paginas.direita.texto;
+
+    const ocorrencias = [];
+    if (textoPesquisado) {
+        let posicao = textoCompleto.indexOf(textoPesquisado);
+        while (posicao !== -1) {
+            ocorrencias.push(posicao);
+            posicao = textoCompleto.indexOf(textoPesquisado, posicao + textoPesquisado.length);
+        }
+    }
+
+    [paginas.esquerda, paginas.direita].forEach((pagina, indice) => {
+        pagina.destaques = [];
+        const inicioPagina = indice * TAMANHO_PAGINA;
+
+        for (const posicao of ocorrencias) {
+            const inicio = Math.max(0, posicao - inicioPagina);
+            const fim = Math.min(
+                TAMANHO_PAGINA,
+                posicao + textoPesquisado.length - inicioPagina
+            );
+
+            if (inicio < fim) {
+                pagina.destaques.push({ inicio, fim });
+            }
+        }
+    });
+
+    return paginas;
 }
 
 function preencherPagina(elemento, dados) {
-    elemento.querySelector('.texto-pagina').textContent = dados.texto;
+    const container = elemento.querySelector('.texto-pagina');
+    const conteudo = document.createDocumentFragment();
+    let posicao = 0;
+
+    dados.destaques.forEach(({ inicio, fim }) => {
+        conteudo.append(document.createTextNode(dados.texto.slice(posicao, inicio)));
+
+        const destaque = document.createElement('mark');
+        destaque.textContent = dados.texto.slice(inicio, fim);
+        conteudo.append(destaque);
+        posicao = fim;
+    });
+
+    conteudo.append(document.createTextNode(dados.texto.slice(posicao)));
+    container.replaceChildren(conteudo);
     elemento.querySelector('.numero-pagina').textContent = dados.numero;
 }
 
 function renderizar() {
     const paginas = obterPar(estado, estado.par);
 
+    const salaCompleta = formatarSala(estado.sala);
+
+    const salaResumida = salaCompleta.length > 20
+        ? `${salaCompleta.slice(0, 8)}…${salaCompleta.slice(-8)}`
+        : salaCompleta;
+
     preencherPagina(paginaEsquerda, paginas.esquerda);
     preencherPagina(paginaDireita, paginas.direita);
+    preencherPagina(versoCapa, paginas.esquerda);
 
     elementoLivro.classList.toggle(
         'fechado',
@@ -53,7 +136,7 @@ function renderizar() {
 
     if (estado.aberto) {
         endereco.textContent =
-            `Sala ${estado.sala}, estante ${estado.estante}, livro ${estado.livro}, páginas ${paginas.esquerda.numero} e ${paginas.direita.numero}.`;
+            `Sala ${salaResumida}, estante ${estado.estante}, livro ${estado.livro}, páginas ${paginas.esquerda.numero} e ${paginas.direita.numero}.`;
     } else {
         endereco.textContent = estado.animando
             ? 'Abrindo o livro…'
@@ -66,13 +149,8 @@ function renderizar() {
         bloquearNavegacao || estado.par <= 1;
 
     document.getElementById('proxima').disabled =
-        bloquearNavegacao || estado.par >= 205;
+        bloquearNavegacao || estado.par >= LIMITES.paginas / 2;
 
-    botaoAbrir.disabled = estado.aberto || estado.animando;
-
-    botaoAbrir.textContent = estado.aberto
-        ? 'Livro aberto'
-        : 'Abrir livro';
 }
 
 async function abrirLivro() {
@@ -87,29 +165,23 @@ async function abrirLivro() {
     try {
         renderizar();
 
-        const reduzirMovimento = window.matchMedia(
-            '(prefers-reduced-motion: reduce)'
-        ).matches;
-
-        if (!reduzirMovimento) {
-            animacao = capa.animate(
-                [
-                    {
-                        transform: 'translateZ(4px) rotateY(0deg)'
-                    },
-                    {
-                        transform: 'translateZ(4px) rotateY(-180deg)'
-                    }
-                ],
+        animacao = capa.animate(
+            [
                 {
-                    duration: 1400,
-                    easing: 'ease-in-out',
-                    fill: 'forwards'
+                    transform: 'translateZ(4px) rotateY(0deg)'
+                },
+                {
+                    transform: 'translateZ(4px) rotateY(-180deg)'
                 }
-            );
+            ],
+            {
+                duration: 1400,
+                easing: 'ease-in-out',
+                fill: 'forwards'
+            }
+        );
 
-            await animacao.finished;
-        }
+        await animacao.finished;
 
         estado.aberto = true;
     } catch (erro) {
@@ -124,30 +196,31 @@ async function abrirLivro() {
     }
 }
 
-async function virar(direcao) {
+async function virar(direcao, endereco = null) {
     if (!estado.aberto || estado.animando) {
-        return;
+        return false;
     }
 
-    const destino = estado.par + direcao;
+    const destino = endereco
+        ? Math.ceil(endereco.pagina / 2)
+        : estado.par + direcao;
 
-    if (destino < 1 || destino > 205) {
-        return;
+    if (destino < 1 || destino > LIMITES.paginas / 2) {
+        return false;
     }
 
-    // const reduzirMovimento = window.matchMedia(
-    //     '(prefers-reduced-motion: reduce)'
-    // ).matches;
+    const alvo = endereco ?? estado;
 
-    // if (reduzirMovimento) {
-    //     estado.par = destino;
-    //     renderizar();
-    //     return;
-    // }
+    const novoEstado = {
+        sala: alvo.sala,
+        estante: alvo.estante,
+        livro: alvo.livro,
+        par: destino
+    };
 
     const atual = obterPar(estado, estado.par);
-    const proximo = obterPar(estado, destino);
-    const avancando = direcao == 1;
+    const proximo = obterPar(novoEstado, destino);
+    const avancando = direcao === 1;
 
     let animacao;
 
@@ -162,12 +235,10 @@ async function virar(direcao) {
         if (avancando) {
             preencherPagina(frente, atual.direita);
             preencherPagina(verso, proximo.esquerda);
-
             preencherPagina(paginaDireita, proximo.direita);
         } else {
             preencherPagina(frente, atual.esquerda);
             preencherPagina(verso, proximo.direita);
-
             preencherPagina(paginaEsquerda, proximo.esquerda);
         }
 
@@ -193,9 +264,13 @@ async function virar(direcao) {
 
         await animacao.finished;
 
-        estado.par = destino;
+        Object.assign(estado, novoEstado);
+
+        return true;
     } catch (erro) {
-        console.error('Não foi possível concluir a virada de página.', erro);
+        console.error('Não foi possível concluir a virada.', erro);
+
+        return false;
     } finally {
         estado.animando = false;
         renderizar();
@@ -208,14 +283,108 @@ async function virar(direcao) {
     }
 }
 
-document.getElementById('proxima').addEventListener('click', () => {
-    virar(1);
+async function irParaEndereco(endereco) {
+    if (estado.animando) {
+        return;
+    }
+
+    const { sala, estante, livro, pagina } = endereco;
+
+    validarEndereco(sala, estante, livro, pagina);
+
+    if (estado.aberto) {
+        const concluiu = await virar(1, endereco);
+
+        if (!concluiu) {
+            throw new Error(
+                'Não foi possível mostrar o resultado. Tente novamente.'
+            );
+        }
+    } else {
+        estado.sala = sala;
+        estado.estante = estante;
+        estado.livro = livro;
+        estado.par = Math.ceil(pagina / 2);
+
+        await abrirLivro();
+
+        if (!estado.aberto) {
+            throw new Error(
+                'Não foi possível abrir o livro. Tente novamente.'
+            );
+        }
+    }
+
+    campoSala.value = formatarSala(sala);
+    campoEstante.value = estante;
+    campoLivro.value = livro;
+    campoPagina.value = estado.par * 2 - 1;
+
+    erroEndereco.textContent = '';
+}
+
+document.getElementById('proxima').addEventListener('click', async () => {
+    const concluiu = await virar(1);
+    if (concluiu) campoPagina.value = estado.par * 2 - 1;
 });
 
-document.getElementById('anterior').addEventListener('click', () => {
-    virar(-1);
+document.getElementById('anterior').addEventListener('click', async () => {
+    const concluiu = await virar(-1);
+    if (concluiu) campoPagina.value = estado.par * 2 - 1;
 });
 
-botaoAbrir.addEventListener('click', abrirLivro);
+formularioEndereco.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+
+    if (estado.animando) {
+        return;
+    }
+
+    erroEndereco.textContent = '';
+
+    if (!formularioEndereco.reportValidity()) {
+        return;
+    }
+
+    try {
+        const endereco = {
+            sala: lerSala(campoSala.value),
+            estante: campoEstante.valueAsNumber,
+            livro: campoLivro.valueAsNumber,
+            pagina: campoPagina.valueAsNumber
+        };
+
+        await irParaEndereco(endereco);
+    } catch (erro) {
+        erroEndereco.textContent = erro.message;
+    }
+});
+
+formularioPesquisa.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+
+    if (estado.animando) {
+        return;
+    }
+
+    erroPesquisa.textContent = '';
+
+    if (!formularioPesquisa.reportValidity()) {
+        return;
+    }
+
+    const pesquisaAnterior = textoPesquisado;
+
+    try {
+        const endereco = localizarTexto(campoPesquisa.value);
+        textoPesquisado = endereco.texto;
+
+        await irParaEndereco(endereco);
+    } catch (erro) {
+        textoPesquisado = pesquisaAnterior;
+        renderizar();
+        erroPesquisa.textContent = erro.message;
+    }
+});
 
 renderizar();

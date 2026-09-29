@@ -24,8 +24,11 @@ main{
 }
 .livro{
     position: relative;
-    width: min(90vw, 760px);
+    width: min(90vw, 900px);
     aspect-ratio: 2 / 1.42;
+    transform-style: preserve-3d;
+    transform: translateX(-25%);
+    transition: transform 1400ms ease-in-out;
 }
 .pagina{
     box-sizing: border-box;
@@ -63,7 +66,6 @@ main{
     position: absolute;
     inset: 0;
     padding: 12% 10% 20%;
-    background: var(--pg);
     color: #2a2119;
     backface-visibility: hidden;
     background: linear-gradient(to right, #0003, transparent 18%), var(--pg);
@@ -85,11 +87,6 @@ main{
 .comp{
     perspective: 1800px;
 }
-.livro{
-    transform-style: preserve-3d;
-    transform: translateX(-25%);
-    transition: transform 1400ms ease-in-out;
-}
 .capa{
     position: absolute;
     top: 0;
@@ -101,6 +98,7 @@ main{
     transform-style: preserve-3d;
     transform: translateZ(4px);
     pointer-events: none;
+    container-type: inline-size;
 }
 .capa-frente, .capa-verso{
     box-sizing: border-box;
@@ -119,23 +117,71 @@ main{
 }
 .capa-frente h1{
     margin: 0;
-    font-size: clamp(1rem, 3vw, 2rem);
+    width: 65cqw;
+    font-size: 12cqw;
 }
 .capa-verso{
-    background: var(--pg);
     transform: rotateY(180deg);
     border-radius: 8px 0 0 8px;
     background: linear-gradient(to left, #0003, transparent 18%), var(--pg);
+    padding: 12% 10% 20%;
+    color: #2a2119;
 }
-.livro.fechado > .pagina{
-    visibility: hidden;
-}
-.livro.aberto > .capa{
-    visibility: hidden;
-}
-.livro:not(.aberto) > .pagina-esquerda{
+.livro.fechado > .pagina,
+.livro.aberto > .capa,
+.livro:not(.aberto) > .pagina-esquerda {
     visibility: hidden;
 }
 .livro:not(.fechado){
     transform: translateX(0);
+}
+.texto-pagina {
+    margin: 0;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    scrollbar-width: none;
+    font-size: clamp(5.5px, 1.56vw, 14.4px);
+    text-align: justify;
+    white-space: normal;
+    word-break: break-all;
+}
+
+.numero-pagina {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.pagina-esquerda .numero-pagina,
+.capa-verso .numero-pagina,
+.folha.vai-adiante .verso .numero-pagina,
+.folha.vai-atras .frente .numero-pagina {
+    left: 1rem;
+    right: auto;
+}
+.pagina,
+.face,
+.capa-verso {
+    display: flex;
+    flex-direction: column;
+}
+.texto-pagina::-webkit-scrollbar {
+    display: none;
+}
+
+.texto-pagina mark {
+    background-color: #ffeb3b5e;
+    color: inherit;
+}
+.folha.vai-atras .frente {
+    background: linear-gradient(to left, #0003, transparent 18%), var(--pg);
+    border-radius: 8px 0 0 8px;
+}
+
+.folha.vai-atras .verso {
+    background: linear-gradient(to right, #0003, transparent 18%), var(--pg);
+    border-radius: 0 8px 8px 0;
 }
