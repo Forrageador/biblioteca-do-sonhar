@@ -6,13 +6,16 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="js/biblioteca.js" defer></script>
     <script src="js/app.js" defer></script>
+    <script src="js/efeitos.js" defer></script>
     <title>Biblioteca do Sonhar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="stars" aria-hidden="true"></div>
     <main>
 
         <form id="form-pesquisa">
-            <input id="pesquisa" type="text" maxlength="2000" autocomplete="off" placeholder="Procure o que quiser na biblioteca do Sonhar" aria-label="Texto a procurar na biblioteca">
+            <input id="pesquisa" type="text" maxlength="2000" autocomplete="off" placeholder="Procure o que quiser na biblioteca do Sonhar" aria-label="Texto a procurar na biblioteca" aria-describedby="erro-pesquisa">
             <button type="submit">Procurar</button>
             <p id="erro-pesquisa" role="alert"></p>
         </form>
@@ -20,12 +23,12 @@
         <div class="comp">
             <div class="livro fechado" id="livro">
                 <section class="pagina pagina-esquerda" id="pagina-esquerda">
-                    <p class="texto-pagina">Começo</p>
-                    <span class="numero-pagina">1</span>
+                    <p class="texto-pagina"></p>
+                    <span class="numero-pagina"></span>
                 </section>
                 <section class="pagina pagina-direita" id="pagina-direita">
-                    <p class="texto-pagina">Outro lado</p>
-                    <span class="numero-pagina">2</span>
+                    <p class="texto-pagina"></p>
+                    <span class="numero-pagina"></span>
                 </section>
 
                 <div class="folha vai-adiante" id="folha" aria-hidden="true">
@@ -42,6 +45,9 @@
 
                 <div class="capa" id="capa">
                     <div class="capa-frente">
+                        <svg viewBox="0 0 40 40" aria-hidden="true">
+                            <path d="M27 6a15 15 0 1 0 7 22A12 12 0 0 1 27 6z"/>
+                        </svg>
                         <h1>Biblioteca<br>do Sonhar</h1>
                     </div>
                     <div class="capa-verso" aria-hidden="true">
@@ -57,14 +63,18 @@
         </div>
 
         <form id="form-endereco">
-            <label for="sala">Sala</label>
-            <input id="sala" name="sala" type="text" pattern="[0-9a-zA-Z]+" value="1" required>
-            <label for="estante">Estante</label>
-            <input id="estante" name="estante" type="number" min="1" step="1" value="1" required>
-            <label for="numero-livro">Livro</label>
-            <input id="numero-livro" name="livro" type="number" min="1" step="1" value="1" required>
-            <label for="numero-pagina">Página</label>
-            <input id="numero-pagina" name="pagina" type="number" min="1" step="1" value="1" required>
+            <label for="sala">Sala
+            <input id="sala" name="sala" type="text" pattern="[0-9a-zA-Z]+" value="1" required></label>
+
+            <label for="estante">Estante
+            <input id="estante" name="estante" type="number" min="1" step="1" value="1" required></label>
+
+            <label for="numero-livro">Livro
+            <input id="numero-livro" name="livro" type="number" min="1" step="1" value="1" required></label>
+
+            <label for="numero-pagina">Página
+            <input id="numero-pagina" name="pagina" type="number" min="1" step="1" value="1" required></label>
+            
             <button type="submit">Ir</button>
 
             <p id="erro-endereco" role="alert"></p>
