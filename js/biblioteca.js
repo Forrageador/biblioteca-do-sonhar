@@ -1,4 +1,4 @@
-const ALFABETO = '0123456789abcdefghijklmnopqrstuvwxyzáàâãéêíóôõúüç- .,';
+const ALFABETO = '0123456789abcdefghijklmnopqrstuvwxyzáàâãéêíóôõúüç#@$%_!- .,';
 const ALFABETO_SALAS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 const TAMANHO_PAGINA = 1000;
@@ -8,7 +8,10 @@ const LIMITES = {
     estantes: 5000,
     livros: 1000,
     paginas: 700
-}
+};
+
+const BASE_SALAS = BigInt(ALFABETO_SALAS.length);
+const PARES_POR_LIVRO = LIMITES.paginas / 2;
 
 const BASE = BigInt(ALFABETO.length);
 const TOTAL_TEXTOS = BASE ** BigInt(TAMANHO_PAR);
@@ -89,7 +92,7 @@ function localizarTexto(entrada) {
         .replace(/\s+/g, ' ')
         .trim();
 
-    if (texto.length == 0 || texto.length > TAMANHO_PAR) {
+    if (texto.length === 0 || texto.length > TAMANHO_PAR) {
         throw new Error(
             `Digite de 1 a ${TAMANHO_PAR} caracteres.`
         );
@@ -123,9 +126,9 @@ function localizarTexto(entrada) {
         numero += TOTAL_TEXTOS;
     }
 
-    const par = Number(numero % BigInt(LIMITES.paginas / 2));
-    const pagina = par * 2 + 1 + Math.floor(inicio / TAMANHO_PAGINA);
-    numero /= BigInt(LIMITES.paginas / 2);
+    const indicePar = Number(numero % BigInt(PARES_POR_LIVRO));
+    const pagina = indicePar * 2 + 1 + Math.floor(inicio / TAMANHO_PAGINA);
+    numero /= BigInt(PARES_POR_LIVRO);
 
     const livro = Number(numero % BigInt(LIMITES.livros)) + 1;
     numero /= BigInt(LIMITES.livros);
@@ -142,17 +145,21 @@ function localizarTexto(entrada) {
     };
 }
 
-function gerarPagina(sala, estante, livro, pagina) {
+function gerarTextoDoPar(sala, estante, livro, pagina) {
     validarEndereco(sala, estante, livro, pagina);
 
     let numero = sala - 1n;
 
     numero = numero * BigInt(LIMITES.estantes) + BigInt(estante - 1);
     numero = numero * BigInt(LIMITES.livros) + BigInt(livro - 1);
-    numero = numero * BigInt(LIMITES.paginas / 2)
+    numero = numero * BigInt(PARES_POR_LIVRO)
         + BigInt(Math.floor((pagina - 1) / 2));
 
-    const texto = textoDoNumero(embaralharNumero(numero));
+    return textoDoNumero(embaralharNumero(numero));
+}
+
+function gerarPagina(sala, estante, livro, pagina) {
+    const texto = gerarTextoDoPar(sala, estante, livro, pagina);
     const inicio = (pagina - 1) % 2 * TAMANHO_PAGINA;
 
     return texto.slice(inicio, inicio + TAMANHO_PAGINA);
@@ -180,8 +187,8 @@ function formatarSala(sala) {
     let codigo = '';
 
     do {
-        codigo = ALFABETO_SALAS[Number(sala % 62n)] + codigo;
-        sala /= 62n;
+        codigo = ALFABETO_SALAS[Number(sala % BASE_SALAS)] + codigo;
+        sala /= BASE_SALAS;
     } while (sala > 0n);
 
     return codigo;
@@ -199,7 +206,7 @@ function lerSala(entrada) {
     let sala = 0n;
 
     for (const caractere of codigo) {
-        sala = sala * 62n + BigInt(ALFABETO_SALAS.indexOf(caractere));
+        sala = sala * BASE_SALAS + BigInt(ALFABETO_SALAS.indexOf(caractere));
     }
 
     if (sala < 1n) {

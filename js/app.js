@@ -7,6 +7,9 @@ const estado = {
     aberto: false
 };
 
+const MAX_VIRADAS = 4;
+const INCLINACAO_FOLHEAR = 20;
+
 let textoPesquisado = '';
 
 const formularioPesquisa = document.getElementById('form-pesquisa');
@@ -22,6 +25,7 @@ const campoPagina = document.getElementById('numero-pagina');
 
 const erroEndereco = document.getElementById('erro-endereco');
 
+campoPesquisa.maxLength = TAMANHO_PAR;
 campoEstante.max = LIMITES.estantes;
 campoLivro.max = LIMITES.livros;
 campoPagina.max = LIMITES.paginas;
@@ -37,32 +41,31 @@ const folha = document.getElementById('folha');
 const frente = folha.querySelector('.frente');
 const verso = folha.querySelector('.verso');
 
+const botaoAnterior = document.getElementById('anterior');
+const botaoProxima = document.getElementById('proxima');
+const enderecoAtual = document.getElementById('endereco-atual');
+
 function obterPar(endereco, par) {
     const esquerda = par * 2 - 1;
     const direita = par * 2;
 
+    const textoCompleto = gerarTextoDoPar(
+        endereco.sala,
+        endereco.estante,
+        endereco.livro,
+        esquerda
+    );
+
     const paginas = {
         esquerda: {
             numero: esquerda,
-            texto: gerarPagina(
-                endereco.sala,
-                endereco.estante,
-                endereco.livro,
-                esquerda
-            )
+            texto: textoCompleto.slice(0, TAMANHO_PAGINA)
         },
         direita: {
             numero: direita,
-            texto: gerarPagina(
-                endereco.sala,
-                endereco.estante,
-                endereco.livro,
-                direita
-            )
+            texto: textoCompleto.slice(TAMANHO_PAGINA)
         }
     };
-
-    const textoCompleto = paginas.esquerda.texto + paginas.direita.texto;
 
     const ocorrencias = [];
     if (textoPesquisado) {
@@ -112,45 +115,46 @@ function preencherPagina(elemento, dados) {
     elemento.querySelector('.numero-pagina').textContent = dados.numero;
 }
 
-function renderizar() {
-    const paginas = obterPar(estado, estado.par);
-
-    const salaCompleta = formatarSala(estado.sala);
-
-    const salaResumida = salaCompleta.length > 20
-        ? `${salaCompleta.slice(0, 8)}…${salaCompleta.slice(-8)}`
-        : salaCompleta;
-
-    preencherPagina(paginaEsquerda, paginas.esquerda);
-    preencherPagina(paginaDireita, paginas.direita);
-    preencherPagina(versoCapa, paginas.esquerda);
-
+function atualizarControles() {
+    elementoLivro.classList.toggle('animando', estado.animando);
     elementoLivro.classList.toggle(
         'fechado',
         !estado.aberto && !estado.animando
     );
-
     elementoLivro.classList.toggle('aberto', estado.aberto);
 
+    const salaCompleta = formatarSala(estado.sala);
+    const salaResumida = salaCompleta.length > 20
+        ? `${salaCompleta.slice(0, 8)}…${salaCompleta.slice(-8)}`
+        : salaCompleta;
+
+    const esquerda = estado.par * 2 - 1;
+    const direita = estado.par * 2;
     const endereco = document.getElementById('endereco-atual');
 
     if (estado.aberto) {
-        endereco.textContent =
-            `Sala ${salaResumida}, estante ${estado.estante}, livro ${estado.livro}, páginas ${paginas.esquerda.numero} e ${paginas.direita.numero}.`;
+        enderecoAtual.textContent =
+            `Sala ${salaResumida}, estante ${estado.estante}, livro ${estado.livro}, páginas ${esquerda} e ${direita}.`;
     } else {
-        endereco.textContent = estado.animando
+        enderecoAtual.textContent = estado.animando
             ? 'Abrindo o livro…'
             : 'O livro está fechado.';
     }
 
     const bloquearNavegacao = !estado.aberto || estado.animando;
 
-    document.getElementById('anterior').disabled =
+    botaoAnterior.disabled =
         bloquearNavegacao || estado.par <= 1;
 
-    document.getElementById('proxima').disabled =
-        bloquearNavegacao || estado.par >= LIMITES.paginas / 2;
+    botaoProxima.disabled =
+        bloquearNavegacao || estado.par >= PARES_POR_LIVRO;
+}
 
+function renderizar(paginas = obterPar(estado, estado.par)) {
+    atualizarControles();
+    preencherPagina(paginaEsquerda, paginas.esquerda);
+    preencherPagina(paginaDireita, paginas.direita);
+    preencherPagina(versoCapa, paginas.esquerda);
 }
 
 async function abrirLivro() {
@@ -184,15 +188,56 @@ async function abrirLivro() {
         await animacao.finished;
 
         estado.aberto = true;
+        campoPagina.value = estado.par * 2 - 1;
     } catch (erro) {
         console.error('Não foi possível abrir o livro.', erro);
     } finally {
         estado.animando = false;
-        renderizar();
+        atualizarControles();
 
         if (animacao) {
             animacao.cancel();
         }
+    }
+}
+
+async function ajustarInclinacao(angulo) {
+    elementoLivro.style.setProperty(
+        '--inclinacao',
+        `${angulo}deg`
+    );
+
+    const animacoes = [
+        ...paginaEsquerda.getAnimations(),
+        ...paginaDireita.getAnimations()
+    ];
+
+    await Promise.allSettled(
+        animacoes.map(animacao => animacao.finished)
+    );
+}
+
+async function animarFolha(anguloInicial, anguloFinal, duracao){
+    const animacao = folha.animate(
+        [
+            {
+                transform: `translateZ(2px) rotateY(${anguloInicial}deg)`
+            },
+            {
+                transform: `translateZ(2px) rotateY(${anguloFinal}deg)`
+            }
+        ],
+        {
+            duration: duracao,
+            easing: 'ease-in-out',
+            fill: 'forwards'
+        }
+    );
+
+    try {
+        await animacao.finished;
+    } finally {
+        animacao.cancel();
     }
 }
 
@@ -205,7 +250,7 @@ async function virar(direcao, endereco = null) {
         ? Math.ceil(endereco.pagina / 2)
         : estado.par + direcao;
 
-    if (destino < 1 || destino > LIMITES.paginas / 2) {
+    if (destino < 1 || destino > PARES_POR_LIVRO) {
         return false;
     }
 
@@ -220,14 +265,29 @@ async function virar(direcao, endereco = null) {
 
     const atual = obterPar(estado, estado.par);
     const proximo = obterPar(novoEstado, destino);
-    const avancando = direcao === 1;
+    let paginasFinais = atual;
+    const mesmoLivro =
+        alvo.sala === estado.sala &&
+        alvo.estante === estado.estante &&
+        alvo.livro === estado.livro;
 
-    let animacao;
+    const distancia = Math.abs(destino - estado.par);
+
+    const quantidade = mesmoLivro
+        ? Math.min(MAX_VIRADAS, Math.max(1, distancia))
+        : MAX_VIRADAS;
+
+    const inclinacao = quantidade > 1 ? INCLINACAO_FOLHEAR : 0;
+
+    const avancando = mesmoLivro
+        ? destino >= estado.par
+        : direcao === 1;
 
     estado.animando = true;
 
     try {
-        renderizar();
+        renderizar(atual);
+        await ajustarInclinacao(inclinacao);
 
         folha.classList.toggle('vai-adiante', avancando);
         folha.classList.toggle('vai-atras', !avancando);
@@ -242,29 +302,33 @@ async function virar(direcao, endereco = null) {
             preencherPagina(paginaEsquerda, proximo.esquerda);
         }
 
-        const angulo = avancando ? -180 : 180;
+        const anguloInicial = avancando
+            ? -inclinacao
+            : inclinacao;
+
+        const anguloFinal = avancando
+            ? -180 + inclinacao
+            : 180 - inclinacao;
 
         folha.style.visibility = 'visible';
 
-        animacao = folha.animate(
-            [
-                {
-                    transform: 'translateZ(2px) rotateY(0deg)'
-                },
-                {
-                    transform: `translateZ(2px) rotateY(${angulo}deg)`
-                }
-            ],
-            {
-                duration: 900,
-                easing: 'ease-in-out',
-                fill: 'forwards'
-            }
-        );
+        for (let i = 0; i < quantidade; i++) {
+            const ultima = i === quantidade - 1;
 
-        await animacao.finished;
+            let duracao = 150;
+
+            if (quantidade === 1) {
+                duracao = 900;
+            } else if (ultima) {
+                duracao = 600;
+            }
+
+            await animarFolha(anguloInicial, anguloFinal, duracao);
+        }
 
         Object.assign(estado, novoEstado);
+        campoPagina.value = estado.par * 2 - 1;
+        paginasFinais = proximo;
 
         return true;
     } catch (erro) {
@@ -272,14 +336,16 @@ async function virar(direcao, endereco = null) {
 
         return false;
     } finally {
-        estado.animando = false;
-        renderizar();
-
         folha.style.visibility = 'hidden';
 
-        if (animacao) {
-            animacao.cancel();
-        }
+        renderizar(paginasFinais);
+
+        await ajustarInclinacao(0);
+
+        elementoLivro.style.removeProperty('--inclinacao');
+
+        estado.animando = false;
+        atualizarControles();
     }
 }
 
@@ -318,19 +384,16 @@ async function irParaEndereco(endereco) {
     campoSala.value = formatarSala(sala);
     campoEstante.value = estante;
     campoLivro.value = livro;
-    campoPagina.value = estado.par * 2 - 1;
 
     erroEndereco.textContent = '';
 }
 
-document.getElementById('proxima').addEventListener('click', async () => {
-    const concluiu = await virar(1);
-    if (concluiu) campoPagina.value = estado.par * 2 - 1;
+botaoProxima.addEventListener('click', () => {
+    virar(1);
 });
 
-document.getElementById('anterior').addEventListener('click', async () => {
-    const concluiu = await virar(-1);
-    if (concluiu) campoPagina.value = estado.par * 2 - 1;
+botaoAnterior.addEventListener('click', () => {
+    virar(-1);
 });
 
 formularioEndereco.addEventListener('submit', async (evento) => {
