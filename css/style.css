@@ -249,7 +249,8 @@ button:focus-visible {
     overflow: auto;
     overflow-wrap: anywhere;
     scrollbar-width: none;
-    font-size: clamp(5.5px, 1.56vw, 14.4px);
+    font-size: 14px;
+    line-height: 1.25;
     text-align: justify;
     word-break: break-all;
 }

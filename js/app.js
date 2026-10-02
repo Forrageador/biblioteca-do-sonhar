@@ -96,6 +96,32 @@ function obterPar(endereco, par) {
     return paginas;
 }
 
+function ajustarFonte(container) {
+    if (
+        !container.textContent ||
+        container.clientWidth === 0 ||
+        container.clientHeight === 0
+    ) {
+        return;
+    }
+
+    const tamanhoMinimo = 4;
+    let tamanho = 28;
+
+    container.style.fontSize = `${tamanho}px`;
+
+    while (
+        tamanho > tamanhoMinimo &&
+        (
+            container.scrollHeight > container.clientHeight ||
+            container.scrollWidth > container.clientWidth
+        )
+    ) {
+        tamanho -= 0.5;
+        container.style.fontSize = `${tamanho}px`;
+    }
+}
+
 function preencherPagina(elemento, dados) {
     const container = elemento.querySelector('.texto-pagina');
     const conteudo = document.createDocumentFragment();
@@ -113,6 +139,8 @@ function preencherPagina(elemento, dados) {
     conteudo.append(document.createTextNode(dados.texto.slice(posicao)));
     container.replaceChildren(conteudo);
     elemento.querySelector('.numero-pagina').textContent = dados.numero;
+
+    ajustarFonte(container);
 }
 
 function atualizarControles() {
@@ -451,3 +479,15 @@ formularioPesquisa.addEventListener('submit', async (evento) => {
 });
 
 renderizar();
+
+function ajustarFontesDoLivro() {
+    elementoLivro
+        .querySelectorAll('.texto-pagina')
+        .forEach(ajustarFonte);
+}
+
+const observadorLivro = new ResizeObserver(ajustarFontesDoLivro);
+
+observadorLivro.observe(elementoLivro);
+
+document.fonts.ready.then(ajustarFontesDoLivro);
